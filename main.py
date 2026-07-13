@@ -18,7 +18,34 @@ except ImportError:
     pass
 
 # --- IMPORTAMOS LOS CONTROLADORES ---
-from afip_controller import obtener_estado_afip, obtener_ultimo_comprobante, emitir_factura_afip
+# AFIP/ARCA queda como opcional para que el sistema pueda iniciar en la nube
+# aunque Render no tenga instaladas/configuradas las librerías locales de AFIP.
+AFIP_IMPORT_ERROR = None
+
+try:
+    from afip_controller import (
+        obtener_estado_afip,
+        obtener_ultimo_comprobante,
+        emitir_factura_afip
+    )
+except Exception as exc:
+    AFIP_IMPORT_ERROR = str(exc)
+
+    def obtener_estado_afip():
+        return {
+            "status": "offline",
+            "error": f"AFIP/ARCA no disponible en este entorno: {AFIP_IMPORT_ERROR}"
+        }
+
+    def obtener_ultimo_comprobante(*_args, **_kwargs):
+        return None
+
+    def emitir_factura_afip(*_args, **_kwargs):
+        raise RuntimeError(
+            "AFIP/ARCA no está disponible en este entorno. "
+            f"Detalle: {AFIP_IMPORT_ERROR}"
+        )
+
 from pdf_generator import generar_pdf_venta
 
 # --- CONFIGURACIÓN BASE DE DATOS ---
@@ -424,7 +451,8 @@ async def obtener_productos():
         db.close()
 
 @app.get("/afip/status")
-async def check_afip_status(): return obtener_estado_afip()
+async def check_afip_status():
+    return obtener_estado_afip()
 
 @app.get("/afip/proximo-numero/{punto_venta}")
 async def proximo_numero(punto_venta: int, condicion_iva: str = "Consumidor Final"):
