@@ -9,6 +9,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 type Tarea = {
   id: number;
   descripcion: string;
@@ -28,7 +30,7 @@ export function TareasPendientes() {
     setCargando(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/tareas/');
+      const res = await fetch(`${API_URL}/tareas/`);
 
       if (!res.ok) {
         throw new Error('No se pudieron cargar las tareas.');
@@ -60,7 +62,7 @@ export function TareasPendientes() {
     setGuardando(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/tareas/', {
+      const res = await fetch(`${API_URL}/tareas/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -87,7 +89,7 @@ export function TareasPendientes() {
 
   const alternarTarea = async (tarea: Tarea) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/tareas/${tarea.id}/toggle`, {
+      const res = await fetch(`${API_URL}/tareas/${tarea.id}/toggle`, {
         method: 'PUT'
       });
 
@@ -114,7 +116,7 @@ export function TareasPendientes() {
     }
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/tareas/${tarea.id}`, {
+      const res = await fetch(`${API_URL}/tareas/${tarea.id}`, {
         method: 'DELETE'
       });
 

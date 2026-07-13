@@ -17,6 +17,8 @@ import {
   RefreshCcw
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export const Proveedores = () => {
   const [proveedores, setProveedores] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);
@@ -44,17 +46,17 @@ export const Proveedores = () => {
 
   const cargarDatosIniciales = async () => {
     try {
-      const resProv = await fetch('http://127.0.0.1:8000/proveedores/');
+      const resProv = await fetch(`${API_URL}/proveedores/`);
       setProveedores(await resProv.json());
 
-      const resProd = await fetch('http://127.0.0.1:8000/productos/');
+      const resProd = await fetch(`${API_URL}/productos/`);
       setProductos(await resProd.json());
     } catch (err) { console.error(err); }
   };
 
   const cargarMovimientos = async (id: number) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/proveedores/${id}/movimientos/`);
+      const res = await fetch(`${API_URL}/proveedores/${id}/movimientos/`);
       setMovimientos(await res.json());
       setExpandida(null); 
     } catch (err) { console.error(err); }
@@ -71,12 +73,12 @@ export const Proveedores = () => {
   const crearProveedor = async () => {
     if (!formProv.nombre) return;
     setEstado('loading_prov');
-    await fetch('http://127.0.0.1:8000/proveedores/', {
+    await fetch(`${API_URL}/proveedores/`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formProv)
     });
     setFormProv({ nombre: '', cuit: '', telefono: '' });
     
-    const resProv = await fetch('http://127.0.0.1:8000/proveedores/');
+    const resProv = await fetch(`${API_URL}/proveedores/`);
     setProveedores(await resProv.json());
     setEstado('idle');
   };
@@ -86,7 +88,7 @@ export const Proveedores = () => {
     if (!window.confirm("ATENCIÓN: ¿Estás seguro de borrar este proveedor? Se borrará todo su historial.")) return;
     
     try {
-      await fetch(`http://127.0.0.1:8000/proveedores/${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/proveedores/${id}`, { method: 'DELETE' });
       if (provActivo?.id === id) setProvActivo(null); 
       cargarDatosIniciales();
     } catch (err) { console.error(err); }
@@ -101,7 +103,7 @@ export const Proveedores = () => {
   const guardarEdicionProveedor = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     try {
-      await fetch(`http://127.0.0.1:8000/proveedores/${id}`, {
+      await fetch(`${API_URL}/proveedores/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: nombreEditado })
@@ -150,7 +152,7 @@ export const Proveedores = () => {
     
     setEstado('loading_mov');
     try {
-      const res = await fetch(`http://127.0.0.1:8000/proveedores/${provActivo.id}/movimientos/`, {
+      const res = await fetch(`${API_URL}/proveedores/${provActivo.id}/movimientos/`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
           tipo: tipoRealParaBD,
@@ -176,7 +178,7 @@ export const Proveedores = () => {
       setFormMov({ tipo: 'cargo', monto: '', detalle: '', cantidadCajas: '', precioUnitario: '' });
       setItems([]);
       
-      const resProv = await fetch('http://127.0.0.1:8000/proveedores/');
+      const resProv = await fetch(`${API_URL}/proveedores/`);
       const dataProv = await resProv.json();
       setProveedores(dataProv);
       setProvActivo(dataProv.find((p: any) => p.id === provActivo.id));
@@ -193,12 +195,12 @@ export const Proveedores = () => {
     if (!window.confirm("ATENCIÓN: ¿Estás seguro de anular esta operación? El saldo del proveedor y el stock se recalcularán automáticamente.")) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/proveedores/${provActivo.id}/movimientos/${movId}`, {
+      const res = await fetch(`${API_URL}/proveedores/${provActivo.id}/movimientos/${movId}`, {
         method: 'DELETE'
       });
       
       if (res.ok) {
-        const resProv = await fetch('http://127.0.0.1:8000/proveedores/');
+        const resProv = await fetch(`${API_URL}/proveedores/`);
         const dataProv = await resProv.json();
         setProveedores(dataProv);
         setProvActivo(dataProv.find((p: any) => p.id === provActivo.id));

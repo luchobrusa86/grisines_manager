@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Minus, 
   X, 
   TrendingDown, 
   CheckCircle2, 
   AlertCircle,
-  Receipt,
   Store,
-  PackageOpen
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
   const [abierto, setAbierto] = useState(false);
@@ -32,7 +32,7 @@ export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
 
   useEffect(() => {
     if (abierto) {
-      fetch('http://127.0.0.1:8000/configuracion/')
+      fetch(`${API_URL}/configuracion/`)
         .then(res => res.json())
         .then(data => {
           setInsumos(data.insumos || []);
@@ -40,7 +40,7 @@ export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
         })
         .catch(err => console.error("Error cargando configuración:", err));
         
-      fetch('http://127.0.0.1:8000/proveedores/')
+      fetch(`${API_URL}/proveedores/`)
         .then(res => res.json())
         .then(data => setProveedoresBD(data || []))
         .catch(err => console.error("Error cargando proveedores:", err));
@@ -73,7 +73,7 @@ export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
         cantidad_insumo: esMateriaPrima && form.cantidad_insumo ? Number(form.cantidad_insumo) : null
       };
 
-      const res = await fetch('http://127.0.0.1:8000/gastos/', {
+      const res = await fetch(`${API_URL}/gastos/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -114,8 +114,6 @@ export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
     window.addEventListener('keydown', apretarTecla);
     return () => window.removeEventListener('keydown', apretarTecla);
   }, [abierto, estado]);
-
-  const insumoSeleccionado = insumos.find(i => i.id.toString() === form.insumo_id);
 
   // Clases CSS reutilizables para inputs
   const inputBaseClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all";

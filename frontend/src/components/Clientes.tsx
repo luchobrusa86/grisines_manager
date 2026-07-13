@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   UserPlus, 
-  Search, 
   Edit2, 
   Trash2, 
   Save, 
@@ -17,6 +16,8 @@ import {
   ArrowDownRight,
   RefreshCcw
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 export const Clientes = () => {
   const [clientes, setClientes] = useState<any[]>([]);
@@ -45,17 +46,17 @@ export const Clientes = () => {
 
   const cargarDatosIniciales = async () => {
     try {
-      const resCli = await fetch('http://127.0.0.1:8000/clientes_mayoristas/');
+      const resCli = await fetch(`${API_URL}/clientes_mayoristas/`);
       setClientes(await resCli.json());
 
-      const resProd = await fetch('http://127.0.0.1:8000/productos/');
+      const resProd = await fetch(`${API_URL}/productos/`);
       setProductos(await resProd.json());
     } catch (err) { console.error(err); }
   };
 
   const cargarMovimientos = async (id: number) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/clientes_mayoristas/${id}/movimientos/`);
+      const res = await fetch(`${API_URL}/clientes_mayoristas/${id}/movimientos/`);
       setMovimientos(await res.json());
       setExpandida(null); 
     } catch (err) { console.error(err); }
@@ -72,12 +73,12 @@ export const Clientes = () => {
   const crearCliente = async () => {
     if (!formCli.nombre) return;
     setEstado('loading_cli');
-    await fetch('http://127.0.0.1:8000/clientes_mayoristas/', {
+    await fetch(`${API_URL}/clientes_mayoristas/`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nombre: formCli.nombre, cuit: formCli.cuit, telefono: formCli.telefono || '' })
     });
     setFormCli({ nombre: '', cuit: '', telefono: '' });
     
-    const resCli = await fetch('http://127.0.0.1:8000/clientes_mayoristas/');
+    const resCli = await fetch(`${API_URL}/clientes_mayoristas/`);
     setClientes(await resCli.json());
     setEstado('idle');
   };
@@ -87,7 +88,7 @@ export const Clientes = () => {
     if (!window.confirm("ATENCIÓN: ¿Estás seguro de borrar este cliente? Se borrará todo su historial.")) return;
     
     try {
-      await fetch(`http://127.0.0.1:8000/clientes_mayoristas/${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/clientes_mayoristas/${id}`, { method: 'DELETE' });
       if (cliActivo?.id === id) setCliActivo(null); 
       cargarDatosIniciales();
     } catch (err) { console.error(err); }
@@ -102,7 +103,7 @@ export const Clientes = () => {
   const guardarEdicionCliente = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     try {
-      await fetch(`http://127.0.0.1:8000/clientes_mayoristas/${id}`, {
+      await fetch(`${API_URL}/clientes_mayoristas/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: nombreEditado })
@@ -145,7 +146,7 @@ export const Clientes = () => {
     
     setEstado('loading_mov');
     try {
-      const res = await fetch(`http://127.0.0.1:8000/clientes_mayoristas/${cliActivo.id}/movimientos/`, {
+      const res = await fetch(`${API_URL}/clientes_mayoristas/${cliActivo.id}/movimientos/`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
           tipo: tipoRealParaBD,
@@ -165,7 +166,7 @@ export const Clientes = () => {
       setFormMov({ tipo: 'cargo', monto: '', detalle: '', cantidadCajas: '', precioUnitario: '' });
       setItems([]);
       
-      const resCli = await fetch('http://127.0.0.1:8000/clientes_mayoristas/');
+      const resCli = await fetch(`${API_URL}/clientes_mayoristas/`);
       const dataCli = await resCli.json();
       setClientes(dataCli);
       setCliActivo(dataCli.find((c: any) => c.id === cliActivo.id));
@@ -182,12 +183,12 @@ export const Clientes = () => {
     if (!window.confirm("ATENCIÓN: ¿Estás seguro de anular esta operación? El saldo del cliente y el stock se recalcularán automáticamente.")) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/clientes_mayoristas/${cliActivo.id}/movimientos/${movId}`, {
+      const res = await fetch(`${API_URL}/clientes_mayoristas/${cliActivo.id}/movimientos/${movId}`, {
         method: 'DELETE'
       });
       
       if (res.ok) {
-        const resCli = await fetch('http://127.0.0.1:8000/clientes_mayoristas/');
+        const resCli = await fetch(`${API_URL}/clientes_mayoristas/`);
         const dataCli = await resCli.json();
         setClientes(dataCli);
         setCliActivo(dataCli.find((c: any) => c.id === cliActivo.id));

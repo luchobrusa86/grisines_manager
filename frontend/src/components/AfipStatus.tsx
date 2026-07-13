@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Activity, ServerOff, RefreshCw } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 interface AfipState {
     status: 'online' | 'offline' | 'loading';
     app?: string;
@@ -12,7 +14,7 @@ const AfipStatus: React.FC = () => {
 
     const checkStatus = async () => {
         try {
-            const response = await fetch('http://localhost:8000/afip/status');
+            const response = await fetch(`${API_URL}/afip/status`);
             const data = await response.json();
             setStatusData(data);
         } catch (error) {

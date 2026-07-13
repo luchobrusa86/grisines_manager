@@ -5,8 +5,9 @@ import {
   RefreshCw, 
   Trash2, 
   Receipt,
-  CircleDollarSign
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 export const ListadoGastos = () => {
   const [gastos, setGastos] = useState<any[]>([]);
@@ -26,7 +27,7 @@ export const ListadoGastos = () => {
 
   const cargarGastos = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/gastos/');
+      const res = await fetch(`${API_URL}/gastos/`);
       const data = await res.json();
       setGastos(data);
     } catch (err) {
@@ -42,7 +43,7 @@ export const ListadoGastos = () => {
     if (!window.confirm("ATENCIÓN: ¿Estás seguro de que querés anular este gasto?\nSe eliminará del historial y de los cálculos del tablero.")) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/gastos/${gastoId}`, {
+      const res = await fetch(`${API_URL}/gastos/${gastoId}`, {
         method: 'DELETE'
       });
       

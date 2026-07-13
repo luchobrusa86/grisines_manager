@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Settings, 
   Save, 
@@ -12,6 +12,8 @@ import {
   TrendingUp, 
   Banknote 
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 export const ConfiguracionCostos = () => {
   const [config, setConfig] = useState<any>({ insumos: [], servicios: [], empleados: [], receta: [] });
@@ -30,7 +32,7 @@ export const ConfiguracionCostos = () => {
 
   const cargarDatos = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/configuracion/');
+      const res = await fetch(`${API_URL}/configuracion/`);
       const data = await res.json();
       setConfig(data);
       setParametros(data.parametros);
@@ -44,7 +46,7 @@ export const ConfiguracionCostos = () => {
     if (tipo !== 'receta' && !payload.nombre) return;
     if (tipo === 'receta' && (!payload.insumo_id || !payload.cantidad_usada)) return;
     
-    await fetch(`http://127.0.0.1:8000/configuracion/${tipo}/`, {
+    await fetch(`${API_URL}/configuracion/${tipo}/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -55,7 +57,7 @@ export const ConfiguracionCostos = () => {
 
   const borrarItem = async (tipo: string, id: number) => {
     if (!window.confirm("¿Estás seguro de borrar este registro?")) return;
-    await fetch(`http://127.0.0.1:8000/configuracion/${tipo}/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/configuracion/${tipo}/${id}`, { method: 'DELETE' });
     cargarDatos();
   };
 
@@ -64,17 +66,12 @@ export const ConfiguracionCostos = () => {
     setFormEdicion({ ...item });
   };
 
-  const cancelarEdicion = () => {
-    setEditando(null);
-    setFormEdicion({});
-  };
-
   const guardarEdicion = async (tipo: string, id: number) => {
     const payload = tipo === 'servicios'
       ? { nombre: formEdicion.nombre, valor: 0 }
       : formEdicion;
 
-    await fetch(`http://127.0.0.1:8000/configuracion/${tipo}/${id}`, {
+    await fetch(`${API_URL}/configuracion/${tipo}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -85,7 +82,7 @@ export const ConfiguracionCostos = () => {
   };
 
   const guardarParametros = async () => {
-    await fetch('http://127.0.0.1:8000/configuracion/parametros/', {
+    await fetch(`${API_URL}/configuracion/parametros/`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(parametros)

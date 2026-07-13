@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ChefHat, Package, Plus, Trash2, Calendar, Search, X } from 'lucide-react';
 
-const fechaInputHoy = () => {
-  const hoy = new Date();
-  return hoy.toISOString().slice(0, 10);
-};
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 
 const primerDiaMesActual = () => {
   const hoy = new Date();
@@ -52,8 +50,8 @@ export const Produccion = () => {
   const cargarDatos = async () => {
     try {
       const [resProd, resHist] = await Promise.all([
-        fetch('http://127.0.0.1:8000/productos/'),
-        fetch('http://127.0.0.1:8000/produccion/')
+        fetch(`${API_URL}/productos/`),
+        fetch(`${API_URL}/produccion/`)
       ]);
       const dataProd = await resProd.json();
       const dataHist = await resHist.json();
@@ -114,7 +112,7 @@ export const Produccion = () => {
     const prodSeleccionado = productos.find(p => String(p.codigo) === String(idProducto));
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/produccion/', {
+      const res = await fetch(`${API_URL}/produccion/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -143,7 +141,7 @@ export const Produccion = () => {
     if (!window.confirm('¿Estás seguro de eliminar este registro de producción?\nSe descontará del stock actual.')) return;
     
     try {
-      const res = await fetch(`http://127.0.0.1:8000/produccion/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/produccion/${id}`, { method: 'DELETE' });
       if (res.ok) cargarDatos();
     } catch (err) {
       console.error(err);

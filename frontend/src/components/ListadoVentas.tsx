@@ -12,6 +12,8 @@ import {
   Package
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export const ListadoVentas = () => {
   const [ventas, setVentas] = useState<any[]>([]);
   const [filtro, setFiltro] = useState('');
@@ -35,7 +37,7 @@ export const ListadoVentas = () => {
 
   const cargarVentas = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/ventas/');
+      const res = await fetch(`${API_URL}/ventas/`);
       const data = await res.json();
       setVentas(data);
     } catch (err) {
@@ -55,7 +57,7 @@ export const ListadoVentas = () => {
       if (filtro.trim()) params.set('buscar', filtro.trim());
 
       const res = await fetch(
-        `http://127.0.0.1:8000/ventas/resumen-filtrado?${params.toString()}`
+        `${API_URL}/ventas/resumen-filtrado?${params.toString()}`
       );
 
       if (!res.ok) {
@@ -100,7 +102,7 @@ export const ListadoVentas = () => {
     }
     if (!detallesCargados[id]) {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/ventas/${id}/detalles`);
+        const res = await fetch(`${API_URL}/ventas/${id}/detalles`);
         const data = await res.json();
         setDetallesCargados({ ...detallesCargados, [id]: data });
       } catch (err) {
@@ -111,14 +113,14 @@ export const ListadoVentas = () => {
   };
 
   const descargarPDF = (id: number) => {
-    window.open(`http://127.0.0.1:8000/ventas/${id}/pdf`, '_blank');
+    window.open(`${API_URL}/ventas/${id}/pdf`, '_blank');
   };
 
   const anularVenta = async (id: number) => {
     if (!window.confirm("ATENCIÓN: ¿Estás seguro de anular esta venta interna?\n\nSe borrará del historial, se descontará la plata de la caja y la mercadería volverá automáticamente al stock.")) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/ventas/${id}`, {
+      const res = await fetch(`${API_URL}/ventas/${id}`, {
         method: 'DELETE'
       });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NuevaVenta } from './components/NuevaVenta';
 import { ListadoVentas } from './components/ListadoVentas';
 import { NuevoGasto } from './components/NuevoGasto'; 
@@ -12,8 +12,6 @@ import { TareasPendientes } from './components/TareasPendientes';
 import logoEmpresa from './assets/images/logo_maria_lujan.png';
 import { 
   BarChart3, 
-  CircleDollarSign, 
-  TrendingDown, 
   Banknote, 
   Wheat, 
   HardHat, 
@@ -32,11 +30,12 @@ import {
   BookUser,
   Settings,
   ListChecks,
-  ArrowRight,
   Gauge,
   AlertTriangle,
   Info
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const MESES = [
   { val: 1, nombre: 'Enero' }, { val: 2, nombre: 'Febrero' }, { val: 3, nombre: 'Marzo' },
@@ -56,7 +55,7 @@ function App() {
 
   const actualizarMetricas = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/dashboard/metricas?mes=${mesFiltro}&anio=${anioFiltro}`);
+      const res = await fetch(`${API_URL}/dashboard/metricas?mes=${mesFiltro}&anio=${anioFiltro}`);
       const data = await res.json();
       setMetricas(data);
     } catch (e) {

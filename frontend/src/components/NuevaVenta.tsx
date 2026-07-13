@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import AfipStatus from './AfipStatus';
 import {
   Plus,
@@ -12,6 +12,8 @@ import {
   FileCheck2,
   BadgeCent
 } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 type TipoOperacion = 'Venta' | 'Devolucion';
 type Unidad = 'Cajas' | 'Paquetes';
@@ -119,12 +121,12 @@ export const NuevaVenta = () => {
   useEffect(() => {
     if (!mostrarModal) return;
 
-    fetch('http://127.0.0.1:8000/clientes_mayoristas/')
+    fetch(`${API_URL}/clientes_mayoristas/`)
       .then(res => res.json())
       .then(data => setClientesBD(data))
       .catch(err => console.error('Error cargando clientes', err));
 
-    fetch('http://127.0.0.1:8000/productos/')
+    fetch(`${API_URL}/productos/`)
       .then(res => res.json())
       .then(data => setProductosBD(data))
       .catch(err => console.error('Error cargando productos', err));
@@ -140,7 +142,7 @@ export const NuevaVenta = () => {
         if (esBlanco) {
           const condicionIva = encodeURIComponent(cliente.condicionIva);
           const res = await fetch(
-            `http://127.0.0.1:8000/afip/proximo-numero/${puntoVenta}?condicion_iva=${condicionIva}`
+            `${API_URL}/afip/proximo-numero/${puntoVenta}?condicion_iva=${condicionIva}`
           );
 
           if (!res.ok) throw new Error('Error en AFIP');
@@ -149,7 +151,7 @@ export const NuevaVenta = () => {
           setNroFactura(data.proximo);
         } else {
           const res = await fetch(
-            `http://127.0.0.1:8000/ventas/proximo-numero-interno/${puntoVenta}`
+            `${API_URL}/ventas/proximo-numero-interno/${puntoVenta}`
           );
 
           if (!res.ok) throw new Error('Error en base local');
@@ -380,7 +382,7 @@ export const NuevaVenta = () => {
     setProcesando(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/ventas/', {
+      const res = await fetch(`${API_URL}/ventas/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
