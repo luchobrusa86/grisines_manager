@@ -1,99 +1,120 @@
 import { useState } from 'react';
-import { Calculator, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Calculator, AlertTriangle } from 'lucide-react';
 
 interface BreakEvenProps {
   gastosTotales: number;
 }
 
+const formatearPesos = (valor: number) =>
+  Number(valor || 0).toLocaleString('es-AR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+
 export const BreakEven = ({ gastosTotales }: BreakEvenProps) => {
-  const [precioVenta, setPrecioVenta] = useState(11400); 
+  const [precioVenta, setPrecioVenta] = useState(11400);
   const [costoVariable, setCostoVariable] = useState(5000);
 
   const margenContribucion = precioVenta - costoVariable;
-  const cajasBreakEven = margenContribucion > 0 ? Math.ceil(gastosTotales / margenContribucion) : 0;
+  const isProfitable = margenContribucion > 0;
+  const cajasBreakEven = isProfitable ? Math.ceil(gastosTotales / margenContribucion) : 0;
   const plataBreakEven = cajasBreakEven * precioVenta;
 
-  const isProfitable = margenContribucion > 0;
-
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-gray-900 font-sans">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-        
-        {/* 1. Título y Costos Fijos */}
-        <div className="flex items-center gap-3 min-w-[220px]">
-          <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100/50 flex-shrink-0">
-            <Calculator className="w-4 h-4" />
+    <section className="h-full rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex h-full flex-col gap-3">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+            <Calculator className="h-4 w-4" />
           </div>
-          <div>
-            <h2 className="text-sm font-black tracking-tight text-gray-900">Punto de Equilibrio</h2>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
-              Gastos del Mes: <strong className="text-red-600 font-mono">${Number(gastosTotales).toLocaleString('es-AR')}</strong>
-            </p>
-          </div>
-        </div>
 
-        {/* 2. Controles / Inputs en formato compacto */}
-        <div className="grid grid-cols-2 gap-4 flex-1 max-w-md w-full">
-          <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Precio Promedio Venta</label>
-            <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">$</span>
-              <input 
-                type="number" 
-                value={precioVenta} 
-                onChange={e => setPrecioVenta(Number(e.target.value))} 
-                className="w-full pl-6 pr-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:bg-white focus:border-indigo-500 outline-none transition-all" 
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Costo Variable Caja</label>
-            <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">$</span>
-              <input 
-                type="number" 
-                value={costoVariable} 
-                onChange={e => setCostoVariable(Number(e.target.value))} 
-                className="w-full pl-6 pr-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:bg-white focus:border-indigo-500 outline-none transition-all" 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Flecha indicadora visual solo para escritorio */}
-        <ArrowRight className="hidden lg:block w-4 h-4 text-gray-300" />
-
-        {/* 3. Panel de Resultado Compacto */}
-        <div className={`flex items-center justify-between gap-4 px-4 py-2.5 rounded-xl border transition-colors lg:w-72 w-full ${
-          isProfitable 
-            ? 'bg-blue-50/60 border-blue-100' 
-            : 'bg-red-50/60 border-red-100'
-        }`}>
-          <div>
-            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Meta de Ventas</span>
-            {isProfitable ? (
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <strong className="text-xl font-black text-blue-700 font-mono tracking-tight">{cajasBreakEven}</strong>
-                <span className="text-xs font-bold text-blue-600/80">Cajas</span>
-              </div>
-            ) : (
-              <span className="text-xs font-black text-red-600 tracking-tight block mt-1 flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5" /> Margen Negativo
+          <div className="min-w-0 flex-1">
+            <h2 className="m-0 text-sm font-black tracking-tight text-slate-950">
+              Punto de Equilibrio
+            </h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Gastos del mes
               </span>
+              <span className="font-mono text-xs font-black text-rose-600">
+                ${formatearPesos(gastosTotales)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+              Precio venta
+            </span>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
+                $
+              </span>
+              <input
+                type="number"
+                value={precioVenta}
+                onChange={e => setPrecioVenta(Number(e.target.value))}
+                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-6 pr-2 text-xs font-black text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+              />
+            </div>
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+              Costo caja
+            </span>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
+                $
+              </span>
+              <input
+                type="number"
+                value={costoVariable}
+                onChange={e => setCostoVariable(Number(e.target.value))}
+                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-6 pr-2 text-xs font-black text-slate-800 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+              />
+            </div>
+          </label>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="block text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Meta
+              </span>
+
+              {isProfitable ? (
+                <div className="mt-1 flex items-baseline gap-1">
+                  <strong className="font-mono text-2xl font-black text-indigo-700">
+                    {cajasBreakEven}
+                  </strong>
+                  <span className="text-xs font-black text-indigo-600">
+                    cajas
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1.5 text-[10px] font-black text-red-700 ring-1 ring-red-100">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Margen negativo
+                </div>
+              )}
+            </div>
+
+            {isProfitable && (
+              <div className="rounded-xl bg-white px-3 py-2 text-right ring-1 ring-slate-200">
+                <span className="block text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                  Facturación
+                </span>
+                <strong className="mt-1 block font-mono text-sm font-black text-slate-900">
+                  ${formatearPesos(plataBreakEven)}
+                </strong>
+              </div>
             )}
           </div>
-
-          {isProfitable && (
-            <div className="text-right border-l border-blue-200/60 pl-4">
-              <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider">Eq. Facturación</span>
-              <strong className="block text-xs font-extrabold text-blue-700 font-mono mt-1">
-                ${plataBreakEven.toLocaleString('es-AR')}
-              </strong>
-            </div>
-          )}
         </div>
-
       </div>
     </section>
   );

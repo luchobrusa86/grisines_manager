@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import AfipStatus from './AfipStatus';
 import {
   Plus,
@@ -14,7 +13,8 @@ import {
   BadgeCent
 } from 'lucide-react';
 
-import { API_URL } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 type TipoOperacion = 'Venta' | 'Devolucion';
 type Unidad = 'Cajas' | 'Paquetes';
 type TipoAlerta = 'success' | 'error' | 'warning';
@@ -478,8 +478,8 @@ export const NuevaVenta = () => {
         Nueva Factura / Op.
       </button>
 
-      {mostrarModal && createPortal((
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-900/45 backdrop-blur-sm p-3 sm:p-6 animate-in fade-in duration-200">
+      {mostrarModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           {alerta.mostrar && (
             <div className="absolute inset-0 z-[60] flex items-center justify-center bg-white/80 backdrop-blur-md rounded-2xl">
               <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200">
@@ -517,7 +517,7 @@ export const NuevaVenta = () => {
             </div>
           )}
 
-          <div className="relative w-full max-w-5xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden relative">
             <header className="flex justify-between items-center px-6 py-4 bg-slate-900 text-white flex-shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
@@ -1103,7 +1103,7 @@ export const NuevaVenta = () => {
             </footer>
           </div>
         </div>
-      ), document.body)}
+      )}
 
       <datalist id="lista-productos">
         {productosBD.map((p, i) => (

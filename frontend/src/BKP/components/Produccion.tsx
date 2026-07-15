@@ -1,7 +1,8 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { ChefHat, Package, Plus, Trash2, Calendar, Search, X } from 'lucide-react';
 
-import { API_URL } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 
 const primerDiaMesActual = () => {
   const hoy = new Date();
@@ -96,7 +97,7 @@ export const Produccion = () => {
     setFechaHasta(ultimoDiaMesActual());
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idProducto) {
       alert('Por favor, selecciona un producto.');

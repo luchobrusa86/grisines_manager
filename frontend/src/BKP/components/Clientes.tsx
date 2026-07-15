@@ -17,7 +17,8 @@ import {
   RefreshCcw
 } from 'lucide-react';
 
-import { API_URL } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export const Clientes = () => {
   const [clientes, setClientes] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);

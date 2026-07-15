@@ -12,7 +12,8 @@ import {
   Package
 } from 'lucide-react';
 
-import { API_URL } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export const ListadoVentas = () => {
   const [ventas, setVentas] = useState<any[]>([]);
   const [filtro, setFiltro] = useState('');

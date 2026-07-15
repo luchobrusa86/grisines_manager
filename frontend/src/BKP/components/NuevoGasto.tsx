@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { 
   Minus, 
   X, 
@@ -9,7 +8,8 @@ import {
   Store,
 } from 'lucide-react';
 
-import { API_URL } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
   const [abierto, setAbierto] = useState(false);
   const [insumos, setInsumos] = useState<any[]>([]);
@@ -129,9 +129,9 @@ export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
         Registrar Gasto / Compra
       </button>
 
-      {abierto && createPortal((
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-900/45 backdrop-blur-sm p-3 sm:p-6 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
+      {abierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-200">
             
             {/* Cabecera del Modal */}
             <header className="flex justify-between items-center px-6 py-4 bg-slate-900 text-white flex-shrink-0">
@@ -354,7 +354,7 @@ export function NuevoGasto({ onGastoCreado }: { onGastoCreado: () => void }) {
 
           </div>
         </div>
-      ), document.body)}
+      )}
     </>
   );
 }

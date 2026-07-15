@@ -7,7 +7,8 @@ import {
   Receipt,
 } from 'lucide-react';
 
-import { API_URL } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export const ListadoGastos = () => {
   const [gastos, setGastos] = useState<any[]>([]);
   const [filtro, setFiltro] = useState('');

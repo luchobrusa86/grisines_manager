@@ -13,7 +13,8 @@ import {
   Banknote 
 } from 'lucide-react';
 
-import { API_URL } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export const ConfiguracionCostos = () => {
   const [config, setConfig] = useState<any>({ insumos: [], servicios: [], empleados: [], receta: [] });
   const [parametros, setParametros] = useState({ precio_paquete: 0, cajas_semana_objetivo: 90 });
