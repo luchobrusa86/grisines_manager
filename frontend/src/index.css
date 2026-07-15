@@ -86,15 +86,15 @@ button {
 }
 
 .gm-brand-mini {
-  width: 150px;
-  min-height: 58px;
+  width: 230px;
+  min-height: 78px;
   display: flex;
   align-items: center;
 }
 
 .gm-brand-mini img {
   max-width: 100%;
-  max-height: 70px;
+  max-height: 115px;
   object-fit: contain;
   mix-blend-mode: multiply;
 }
