@@ -187,7 +187,11 @@ function App() {
       <aside className={`gm-sidebar ${menuAbierto ? 'gm-sidebar-open' : ''}`}>
         <div className="gm-sidebar-top">
           <div className="gm-brand-mini">
-            <img src={logoEmpresa} alt="Logo María Luján" />
+            <img
+			  src={logoEmpresa}
+			  alt="Logo María Luján"
+			  className="gm-logo"
+			/>
           </div>
 
           <button
