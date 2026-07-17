@@ -14,6 +14,7 @@ import { API_URL } from './lib/api';
 import {
   AlertCircle,
   Banknote,
+  Boxes,
   BookUser,
   ChefHat,
   CreditCard,
@@ -154,6 +155,30 @@ function App() {
         )
       );
   }, [metricas?.stock_productos]);
+
+  const stockTotal = useMemo(() => {
+    const totalPaquetes = stockProductos.reduce(
+      (total: number, prod: any) => total + Number(prod.stock_paquetes || 0),
+      0
+    );
+
+    const esNegativo = totalPaquetes < 0;
+    const paquetesAbs = Math.abs(totalPaquetes);
+    const cajas = Math.floor(paquetesAbs / 12);
+    const paquetesSueltos = paquetesAbs % 12;
+
+    const textoCajas = totalPaquetes === 0
+      ? '0 cajas'
+      : paquetesSueltos === 0
+        ? `${esNegativo ? '-' : ''}${cajas} cajas`
+        : `${esNegativo ? '-' : ''}${cajas} cajas + ${paquetesSueltos} paq.`;
+
+    return {
+      totalPaquetes,
+      esNegativo,
+      textoCajas
+    };
+  }, [stockProductos]);
 
   const getColorSaborStock = (descripcion: string) => {
     const sabor = (descripcion || '').toLowerCase();
@@ -423,6 +448,21 @@ function App() {
                       </article>
                     );
                   })}
+
+                  <article className="gm-stock-card gm-stock-total-card">
+                    <div className="gm-stock-card-top">
+                      <span className="gm-stock-name gm-stock-total-name">
+                        Total stock
+                      </span>
+                      <Boxes className="w-4 h-4" />
+                    </div>
+
+                    <strong className={stockTotal.esNegativo ? 'gm-stock-negative' : ''}>
+                      {stockTotal.totalPaquetes}
+                    </strong>
+
+                    <p>{stockTotal.textoCajas}</p>
+                  </article>
                 </div>
               </div>
             )}

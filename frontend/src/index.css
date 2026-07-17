@@ -850,3 +850,26 @@ button {
     min-height: 50px;
   }
 }
+
+/* Indicador total de stock */
+.gm-stock-total-card {
+  background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.12);
+}
+
+.gm-stock-total-card strong {
+  color: #1d4ed8;
+}
+
+.gm-stock-total-card p {
+  color: #1e40af;
+}
+
+.gm-stock-total-card svg {
+  color: #2563eb;
+}
+
+.gm-stock-total-name {
+  color: #1d4ed8;
+}
