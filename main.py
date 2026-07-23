@@ -632,12 +632,38 @@ async def obtener_metricas(mes: int = None, anio: int = None):
     total_ventas_facturas = sum((v.total or 0) for v in ventas_mes)
 
     # Ventas cargadas en Cta Cte.
-    # Solo suman como venta los movimientos tipo cargo que tienen mercadería asociada.
-    # Esto evita que una Deuda inicial o Ajuste de saldo se tome como venta.
-    def movimiento_proveedor_tiene_items(movimiento_id: int) -> bool:
-        return db.query(MovimientoCCDetalleDB).filter(
-            MovimientoCCDetalleDB.movimiento_id == movimiento_id
-        ).count() > 0
+    # Proveedores:
+    # - "cargo" / Sumar deuda NO suma a Venta Total.
+    # - "abono" / Restar deuda SÍ suma a Venta Total cuando es una entrega de efectivo/pago a cuenta.
+    # - Las devoluciones de cajas vacías se excluyen porque no son ventas.
+    #
+    # Clientes:
+    # - Se mantiene la lógica anterior: un "cargo" con mercadería asociada suma como venta.
+    def movimiento_proveedor_es_abono_de_venta(movimiento) -> bool:
+        if not movimiento.tipo or movimiento.tipo.lower() != 'abono':
+            return False
+
+        detalle = (movimiento.detalle or '').lower()
+
+        # Las devoluciones de cajas vacías también se registran como abono,
+        # pero no representan una venta ni ingreso comercial.
+        if (
+            "devolución" in detalle
+            or "devolucion" in detalle
+            or "caja vac" in detalle
+            or "cajas vac" in detalle
+        ):
+            return False
+
+        detalles_mov = db.query(MovimientoCCDetalleDB).filter(
+            MovimientoCCDetalleDB.movimiento_id == movimiento.id
+        ).all()
+
+        # Si todos los ítems fueran devoluciones informativas, tampoco cuenta como venta.
+        if detalles_mov and all((d.tipo_item or "venta") == "devolucion" for d in detalles_mov):
+            return False
+
+        return True
 
     def movimiento_cliente_tiene_items(movimiento_id: int) -> bool:
         return db.query(MovimientoClienteDetalleDB).filter(
@@ -651,7 +677,7 @@ async def obtener_metricas(mes: int = None, anio: int = None):
 
     for m in movimientos_proveedores:
         try:
-            if m.tipo and m.tipo.lower() == 'cargo' and movimiento_proveedor_tiene_items(m.id):
+            if movimiento_proveedor_es_abono_de_venta(m):
                 if m.fecha.month == target_mes and m.fecha.year == target_anio:
                     ventas_cc_proveedores_mes.append(m)
                 elif m.fecha.month == mes_ant and m.fecha.year == anio_ant:
@@ -680,7 +706,7 @@ async def obtener_metricas(mes: int = None, anio: int = None):
 
     total_ventas = total_ventas_facturas + total_ventas_cc
     ventas_mes_pasado_total = ventas_mes_pasado_total + total_ventas_cc_mes_pasado
-    
+
     cobranzas = sum((m.monto or 0) for m in movimientos_proveedores if m.tipo and m.tipo.lower() == 'abono') + \
                 sum((m.monto or 0) for m in movimientos_clientes if m.tipo and m.tipo.lower() == 'abono')
 
