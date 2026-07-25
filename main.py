@@ -665,6 +665,38 @@ async def obtener_metricas(mes: int = None, anio: int = None):
 
         return True
 
+    def es_item_mercaderia(codigo, descripcion, tipo_item=None) -> bool:
+        codigo_txt = str(codigo or "").strip()
+        descripcion_txt = str(descripcion or "").strip().lower()
+        tipo_item_txt = str(tipo_item or "venta").strip().lower()
+
+        if tipo_item_txt == "devolucion":
+            return False
+
+        if codigo_txt == "999":
+            return False
+
+        if (
+            "envase" in descripcion_txt
+            or "caja vac" in descripcion_txt
+            or "cajas vac" in descripcion_txt
+            or "devolucion" in descripcion_txt
+            or "devolución" in descripcion_txt
+        ):
+            return False
+
+        return True
+
+    def movimiento_proveedor_tiene_items_mercaderia(movimiento_id: int) -> bool:
+        detalles = db.query(MovimientoCCDetalleDB).filter(
+            MovimientoCCDetalleDB.movimiento_id == movimiento_id
+        ).all()
+
+        return any(
+            es_item_mercaderia(d.codigo, d.descripcion, d.tipo_item)
+            for d in detalles
+        )
+
     def movimiento_cliente_tiene_items(movimiento_id: int) -> bool:
         return db.query(MovimientoClienteDetalleDB).filter(
             MovimientoClienteDetalleDB.movimiento_id == movimiento_id
@@ -706,6 +738,115 @@ async def obtener_metricas(mes: int = None, anio: int = None):
 
     total_ventas = total_ventas_facturas + total_ventas_cc
     ventas_mes_pasado_total = ventas_mes_pasado_total + total_ventas_cc_mes_pasado
+
+    # Venta generada / devengada:
+    # mide la mercadería vendida en el mes, aunque todavía no se haya cobrado.
+    # Incluye facturación directa + cargos de cuenta corriente con mercadería asociada.
+    ventas_generadas_cc_proveedores_mes = []
+    ventas_generadas_cc_proveedores_mes_pasado = []
+
+    for m in movimientos_proveedores:
+        try:
+            if (
+                m.tipo
+                and m.tipo.lower() == 'cargo'
+                and movimiento_proveedor_tiene_items_mercaderia(m.id)
+            ):
+                if m.fecha.month == target_mes and m.fecha.year == target_anio:
+                    ventas_generadas_cc_proveedores_mes.append(m)
+                elif m.fecha.month == mes_ant and m.fecha.year == anio_ant:
+                    ventas_generadas_cc_proveedores_mes_pasado.append(m)
+        except Exception:
+            pass
+
+    total_ventas_generadas_cc_proveedores = sum(
+        (m.monto or 0)
+        for m in ventas_generadas_cc_proveedores_mes
+    )
+
+    total_ventas_generadas_cc_clientes = total_ventas_cc_clientes
+
+    venta_generada_total = (
+        total_ventas_facturas
+        + total_ventas_generadas_cc_proveedores
+        + total_ventas_generadas_cc_clientes
+    )
+
+    venta_generada_mes_pasado_total = (
+        ventas_mes_pasado_total
+        + sum((m.monto or 0) for m in ventas_generadas_cc_proveedores_mes_pasado)
+    )
+
+    # Cajas vendidas:
+    # cuenta unidades de mercadería vendida del período, tomando comprobantes y
+    # cargos de cuenta corriente. Los paquetes se convierten a cajas equivalentes.
+    paquetes_vendidos_total = 0.0
+
+    def sumar_item_vendido(cantidad, unidad) -> float:
+        cantidad_num = float(cantidad or 0)
+        unidad_txt = str(unidad or "").strip().lower()
+
+        if "caja" in unidad_txt:
+            return cantidad_num * paquetes_por_caja
+
+        if "paquete" in unidad_txt or "paq" in unidad_txt:
+            return cantidad_num
+
+        return 0.0
+
+    for venta_cab in ventas_mes:
+        try:
+            detalles_venta = db.query(VentaDetalleDB).filter(
+                VentaDetalleDB.venta_id == venta_cab.id
+            ).all()
+
+            for d in detalles_venta:
+                if es_item_mercaderia(d.codigo, d.descripcion):
+                    paquetes_vendidos_total += sumar_item_vendido(d.cantidad, d.unidad)
+        except Exception:
+            pass
+
+    for m in movimientos_proveedores:
+        try:
+            if not (m.tipo and m.tipo.lower() == 'cargo'):
+                continue
+
+            if not (m.fecha.month == target_mes and m.fecha.year == target_anio):
+                continue
+
+            detalles_mov = db.query(MovimientoCCDetalleDB).filter(
+                MovimientoCCDetalleDB.movimiento_id == m.id
+            ).all()
+
+            for d in detalles_mov:
+                if es_item_mercaderia(d.codigo, d.descripcion, d.tipo_item):
+                    paquetes_vendidos_total += sumar_item_vendido(d.cantidad, d.unidad)
+        except Exception:
+            pass
+
+    for m in movimientos_clientes:
+        try:
+            if not (m.tipo and m.tipo.lower() == 'cargo'):
+                continue
+
+            if not (m.fecha.month == target_mes and m.fecha.year == target_anio):
+                continue
+
+            detalles_mov = db.query(MovimientoClienteDetalleDB).filter(
+                MovimientoClienteDetalleDB.movimiento_id == m.id
+            ).all()
+
+            for d in detalles_mov:
+                if es_item_mercaderia(d.codigo, d.descripcion):
+                    paquetes_vendidos_total += sumar_item_vendido(d.cantidad, d.unidad)
+        except Exception:
+            pass
+
+    cajas_vendidas_total = (
+        paquetes_vendidos_total / paquetes_por_caja
+        if paquetes_por_caja
+        else 0
+    )
 
     cobranzas = sum((m.monto or 0) for m in movimientos_proveedores if m.tipo and m.tipo.lower() == 'abono') + \
                 sum((m.monto or 0) for m in movimientos_clientes if m.tipo and m.tipo.lower() == 'abono')
@@ -871,6 +1012,11 @@ async def obtener_metricas(mes: int = None, anio: int = None):
         "ventas_cc_proveedores": total_ventas_cc_proveedores,
         "ventas_cc_clientes": total_ventas_cc_clientes,
         "ventas_cc_total": total_ventas_cc,
+        "venta_generada_total": venta_generada_total,
+        "ventas_generadas_cc_proveedores": total_ventas_generadas_cc_proveedores,
+        "ventas_generadas_cc_clientes": total_ventas_generadas_cc_clientes,
+        "paquetes_vendidos_total": round(paquetes_vendidos_total, 2),
+        "cajas_vendidas_total": round(cajas_vendidas_total, 2),
         "iva_a_pagar_estimado": iva_estimado,
         "errores_cae": len(ventas_sin_cae), "crecimiento_mes": crecimiento,
         # Total de todos los gastos cargados en el período.

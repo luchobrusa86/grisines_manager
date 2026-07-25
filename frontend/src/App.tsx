@@ -105,6 +105,13 @@ function App() {
     });
   };
 
+  const formatNumber = (val: number | string) => {
+    return Number(val || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
+
   const gastosTotalesReales = Number(
     metricas?.gastos_totales_reales ?? metricas?.total_gastos ?? 0
   );
@@ -114,6 +121,9 @@ function App() {
   );
 
   const ventaTotal = Number(metricas?.caja_real_total || 0);
+  const ventaGeneradaTotal = Number(metricas?.venta_generada_total || 0);
+  const cajasVendidasTotal = Number(metricas?.cajas_vendidas_total || 0);
+  const paquetesVendidosTotal = Number(metricas?.paquetes_vendidos_total || 0);
   const ventaNetaOperativa = ventaTotal - gastosTotalesReales;
 
   const margenRentabilidadNeto = ventaTotal > 0
@@ -209,6 +219,23 @@ function App() {
 
   return (
     <div className="gm-app">
+      <style>{`
+        .gm-kpi-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        @media (max-width: 1180px) {
+          .gm-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 760px) {
+          .gm-kpi-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
       <aside className={`gm-sidebar ${menuAbierto ? 'gm-sidebar-open' : ''}`}>
         <div className="gm-sidebar-top">
           <div className="gm-brand-mini">
@@ -345,7 +372,19 @@ function App() {
               <article className="gm-kpi-card gm-kpi-primary">
                 <span>Venta total</span>
                 <strong>${formatCurrency(ventaTotal)}</strong>
-                <p>Facturación directa + cuenta corriente</p>
+                <p>Facturación + pagos/entregas de cuenta corriente</p>
+              </article>
+
+              <article className="gm-kpi-card gm-kpi-success">
+                <span>Venta generada</span>
+                <strong>${formatCurrency(ventaGeneradaTotal)}</strong>
+                <p>Facturación + cuenta corriente por mercadería vendida</p>
+              </article>
+
+              <article className="gm-kpi-card gm-kpi-muted">
+                <span>Cajas vendidas</span>
+                <strong>{formatNumber(cajasVendidasTotal)}</strong>
+                <p>{formatNumber(paquetesVendidosTotal)} paquetes equivalentes x12</p>
               </article>
 
               <article className="gm-kpi-card gm-kpi-danger">
