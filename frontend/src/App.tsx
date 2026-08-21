@@ -73,10 +73,44 @@ function App() {
   const [pestañaActiva, setPestañaActiva] = useState<TabId>('ventas');
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [cargandoMetricas, setCargandoMetricas] = useState(false);
+  const [saldoPendienteCCLocal, setSaldoPendienteCCLocal] = useState(0);
 
   const fechaActual = new Date();
   const [mesFiltro, setMesFiltro] = useState(fechaActual.getMonth() + 1);
   const [anioFiltro, setAnioFiltro] = useState(fechaActual.getFullYear());
+
+  const calcularSaldoPendienteCC = async () => {
+    try {
+      const [proveedoresRes, clientesRes] = await Promise.all([
+        fetch(`${API_URL}/proveedores/`),
+        fetch(`${API_URL}/clientes_mayoristas/`)
+      ]);
+
+      const proveedores = proveedoresRes.ok ? await proveedoresRes.json() : [];
+      const clientes = clientesRes.ok ? await clientesRes.json() : [];
+
+      const totalProveedores = Array.isArray(proveedores)
+        ? proveedores.reduce(
+            (total: number, proveedor: any) =>
+              total + Math.abs(Number(proveedor?.saldo || 0)),
+            0
+          )
+        : 0;
+
+      const totalClientes = Array.isArray(clientes)
+        ? clientes.reduce(
+            (total: number, cliente: any) =>
+              total + Math.abs(Number(cliente?.saldo || 0)),
+            0
+          )
+        : 0;
+
+      setSaldoPendienteCCLocal(totalProveedores + totalClientes);
+    } catch (e) {
+      console.error('Error calculando saldo pendiente CC', e);
+      setSaldoPendienteCCLocal(0);
+    }
+  };
 
   const actualizarMetricas = async () => {
     setCargandoMetricas(true);
@@ -87,6 +121,7 @@ function App() {
       );
       const data = await res.json();
       setMetricas(data);
+      await calcularSaldoPendienteCC();
     } catch (e) {
       console.error('Error cargando métricas', e);
     } finally {
@@ -121,12 +156,15 @@ function App() {
   );
 
   const ventaGeneradaTotal = Number(metricas?.venta_generada_total || 0);
-  const saldoPendienteCC = Number(
+  const saldoPendienteCCMetricas = Number(
     metricas?.saldo_pendiente_cc ??
     metricas?.saldo_pendiente_cuentas_corrientes ??
     metricas?.saldo_cc_pendiente ??
     0
   );
+  const saldoPendienteCC = saldoPendienteCCMetricas > 0
+    ? saldoPendienteCCMetricas
+    : saldoPendienteCCLocal;
   const cajasVendidasTotal = Number(metricas?.cajas_vendidas_total || 0);
   const paquetesVendidosTotal = Number(metricas?.paquetes_vendidos_total || 0);
   const ventaNetaOperativa = ventaGeneradaTotal - gastosTotalesReales;
