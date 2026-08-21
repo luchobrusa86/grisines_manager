@@ -73,44 +73,11 @@ function App() {
   const [pestañaActiva, setPestañaActiva] = useState<TabId>('ventas');
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [cargandoMetricas, setCargandoMetricas] = useState(false);
-  const [saldoPendienteCCLocal, setSaldoPendienteCCLocal] = useState(0);
+  const [saldoPendienteCC, setSaldoPendienteCC] = useState(0);
 
   const fechaActual = new Date();
   const [mesFiltro, setMesFiltro] = useState(fechaActual.getMonth() + 1);
   const [anioFiltro, setAnioFiltro] = useState(fechaActual.getFullYear());
-
-  const calcularSaldoPendienteCC = async () => {
-    try {
-      const [proveedoresRes, clientesRes] = await Promise.all([
-        fetch(`${API_URL}/proveedores/`),
-        fetch(`${API_URL}/clientes_mayoristas/`)
-      ]);
-
-      const proveedores = proveedoresRes.ok ? await proveedoresRes.json() : [];
-      const clientes = clientesRes.ok ? await clientesRes.json() : [];
-
-      const totalProveedores = Array.isArray(proveedores)
-        ? proveedores.reduce(
-            (total: number, proveedor: any) =>
-              total + Math.abs(Number(proveedor?.saldo || 0)),
-            0
-          )
-        : 0;
-
-      const totalClientes = Array.isArray(clientes)
-        ? clientes.reduce(
-            (total: number, cliente: any) =>
-              total + Math.abs(Number(cliente?.saldo || 0)),
-            0
-          )
-        : 0;
-
-      setSaldoPendienteCCLocal(totalProveedores + totalClientes);
-    } catch (e) {
-      console.error('Error calculando saldo pendiente CC', e);
-      setSaldoPendienteCCLocal(0);
-    }
-  };
 
   const actualizarMetricas = async () => {
     setCargandoMetricas(true);
@@ -121,7 +88,31 @@ function App() {
       );
       const data = await res.json();
       setMetricas(data);
-      await calcularSaldoPendienteCC();
+
+      const [proveedoresRes, clientesRes] = await Promise.allSettled([
+        fetch(`${API_URL}/proveedores/`).then((r) => r.json()),
+        fetch(`${API_URL}/clientes_mayoristas/`).then((r) => r.json())
+      ]);
+
+      const proveedores = proveedoresRes.status === 'fulfilled' && Array.isArray(proveedoresRes.value)
+        ? proveedoresRes.value
+        : [];
+
+      const clientes = clientesRes.status === 'fulfilled' && Array.isArray(clientesRes.value)
+        ? clientesRes.value
+        : [];
+
+      const saldoProveedores = proveedores.reduce(
+        (total: number, proveedor: any) => total + Math.max(0, Number(proveedor.saldo || 0)),
+        0
+      );
+
+      const saldoClientes = clientes.reduce(
+        (total: number, cliente: any) => total + Math.max(0, Number(cliente.saldo || 0)),
+        0
+      );
+
+      setSaldoPendienteCC(saldoProveedores + saldoClientes);
     } catch (e) {
       console.error('Error cargando métricas', e);
     } finally {
@@ -156,26 +147,10 @@ function App() {
   );
 
   const ventaGeneradaTotal = Number(metricas?.venta_generada_total || 0);
-  const saldoPendienteCCMetricas = Number(
-    metricas?.saldo_pendiente_cc ??
-    metricas?.saldo_pendiente_cuentas_corrientes ??
-    metricas?.saldo_cc_pendiente ??
-    0
-  );
-  const saldoPendienteCC = saldoPendienteCCMetricas > 0
-    ? saldoPendienteCCMetricas
-    : saldoPendienteCCLocal;
   const cajasVendidasTotal = Number(metricas?.cajas_vendidas_total || 0);
   const paquetesVendidosTotal = Number(metricas?.paquetes_vendidos_total || 0);
   const ventaNetaOperativa = ventaGeneradaTotal - gastosTotalesReales;
-
-  const rentabilidadLimpia =
-    Number(metricas?.rentabilidad_generada_real ?? metricas?.balance_generado_neto) ||
-    (
-      ventaGeneradaTotal -
-      gastosOperativosSinDuplicar -
-      Number(metricas?.costo_produccion_total || 0)
-    );
+  const rentabilidadLimpia = ventaGeneradaTotal - gastosOperativosSinDuplicar - Number(metricas?.costo_produccion_total || 0);
 
   const margenRentabilidadNeto = ventaGeneradaTotal > 0
     ? ((rentabilidadLimpia / ventaGeneradaTotal) * 100).toFixed(2)
@@ -190,6 +165,8 @@ function App() {
         ? Number(metricas?.costo_produccion_total || 0) / paquetesProducidos
         : 0
     );
+
+
 
   const costoOperativoPorPaquete =
     paquetesProducidos > 0
