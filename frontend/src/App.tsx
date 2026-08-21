@@ -120,14 +120,27 @@ function App() {
     metricas?.gastos_operativos_total ?? metricas?.total_gastos ?? 0
   );
 
-  const ventaTotal = Number(metricas?.caja_real_total || 0);
   const ventaGeneradaTotal = Number(metricas?.venta_generada_total || 0);
+  const saldoPendienteCC = Number(
+    metricas?.saldo_pendiente_cc ??
+    metricas?.saldo_pendiente_cuentas_corrientes ??
+    metricas?.saldo_cc_pendiente ??
+    0
+  );
   const cajasVendidasTotal = Number(metricas?.cajas_vendidas_total || 0);
   const paquetesVendidosTotal = Number(metricas?.paquetes_vendidos_total || 0);
-  const ventaNetaOperativa = ventaTotal - gastosTotalesReales;
+  const ventaNetaOperativa = ventaGeneradaTotal - gastosTotalesReales;
 
-  const margenRentabilidadNeto = ventaTotal > 0
-    ? ((Number(metricas?.balance_neto || 0) / ventaTotal) * 100).toFixed(2)
+  const rentabilidadLimpia =
+    Number(metricas?.rentabilidad_generada_real ?? metricas?.balance_generado_neto) ||
+    (
+      ventaGeneradaTotal -
+      gastosOperativosSinDuplicar -
+      Number(metricas?.costo_produccion_total || 0)
+    );
+
+  const margenRentabilidadNeto = ventaGeneradaTotal > 0
+    ? ((rentabilidadLimpia / ventaGeneradaTotal) * 100).toFixed(2)
     : '0.00';
 
   const paquetesProducidos = Number(metricas?.paquetes_producidos || 0);
@@ -370,9 +383,9 @@ function App() {
 
             <div className="gm-kpi-grid">
               <article className="gm-kpi-card gm-kpi-primary">
-                <span>Venta total</span>
-                <strong>${formatCurrency(ventaTotal)}</strong>
-                <p>Facturación + pagos/entregas de cuenta corriente</p>
+                <span>Saldo pendiente CC</span>
+                <strong>${formatCurrency(saldoPendienteCC)}</strong>
+                <p>Saldo abierto en cuentas corrientes</p>
               </article>
 
               <article className="gm-kpi-card gm-kpi-success">
@@ -396,12 +409,12 @@ function App() {
               <article className={`gm-kpi-card ${ventaNetaOperativa >= 0 ? 'gm-kpi-success' : 'gm-kpi-warning'}`}>
                 <span>Venta neta</span>
                 <strong>${formatCurrency(ventaNetaOperativa)}</strong>
-                <p>Venta total - gastos del período</p>
+                <p>Venta generada - gastos del período</p>
               </article>
 
               <article className="gm-kpi-card gm-kpi-muted">
                 <span>Rentabilidad limpia</span>
-                <strong>${formatCurrency(metricas?.balance_neto)}</strong>
+                <strong>${formatCurrency(rentabilidadLimpia)}</strong>
                 <p>Margen neto: {margenRentabilidadNeto}%</p>
               </article>
             </div>
